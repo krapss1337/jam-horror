@@ -1,0 +1,3 @@
+repository "HorrorJam@creator111111@cloud"
+  path "/"
+    smartbranch "/main"
