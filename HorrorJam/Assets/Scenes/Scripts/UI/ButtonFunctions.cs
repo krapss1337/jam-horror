@@ -14,10 +14,19 @@ public class ButtonFunctions : MonoBehaviour
     public GameObject pages;
     public GameObject creditsCanvas;
 
+    
+
     //Don't forget to "Find" objects on Start, just incase.
     
 
     public void StartButtonFunc(){
+
+        StartCoroutine(LoadTime());
+
+    }
+
+    IEnumerator LoadTime(){
+        yield return new WaitForSeconds(5f);
         SceneManager.LoadScene(mainSceneIndex);
     }
 
