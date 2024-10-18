@@ -62,4 +62,9 @@ public class InputManager : MonoBehaviour
     {
         return playerControls.Player.Interact.IsPressed();
     }
+
+    public bool PlayerCrouch()
+    {
+        return playerControls.Player.Crouch.IsPressed();
+    }
 }
