@@ -22,6 +22,8 @@ public class PlayerController : MonoBehaviour
     private bool canUseHeadBob = true;
     [SerializeField]
     private bool canInteract = true;
+    [SerializeField]
+    private bool canFootsteps = true;
 
     [Header("Movement Parameters")]
     [SerializeField]
@@ -30,6 +32,7 @@ public class PlayerController : MonoBehaviour
     private float sprintSpeed = 10.0f;
     [SerializeField]
     private float crouchSpeed = 2.5f;
+    private Vector3 playerVelocity;
 
     [Header("Jump Parameters")]
     [SerializeField]
@@ -75,6 +78,18 @@ public class PlayerController : MonoBehaviour
     private LayerMask interactionLayer = default;
     private AInteractable currentInteractable;
 
+    [Header("Health Parameters")]
+    [SerializeField]
+    private float maxHealth = 100f;
+    [SerializeField]
+    private float timeBeforeRegenStarts = 3f;
+    [SerializeField]
+    private float healthValueIncrement = 1f;
+    [SerializeField]
+    private float healthTimeIncrement = 0.1f;
+    private float currentHealth;
+    private Coroutine healthRegeneration;
+
     [Header("Stamina Parameters")]
     public float maxPlayerStamina = 10.0f;
     public float playerStamina;
@@ -82,7 +97,6 @@ public class PlayerController : MonoBehaviour
     [Header("Components")]
     private CharacterController controller;
     private CinemachineShake cameraShake;
-    private Vector3 playerVelocity;
     private bool groundedPlayer;
     private InputManager inputManager;
     private Transform cameraTransform;
@@ -140,8 +154,7 @@ public class PlayerController : MonoBehaviour
         Vector2 movement = inputManager.GetPlayerMovement();
 
         Vector3 move = new Vector3(movement.x, 0f, movement.y);
-        playerVelocity.x = movement.x;
-        playerVelocity.z = movement.y;
+        playerVelocity = move;
         move = cameraTransform.forward * move.z + cameraTransform.right * move.x;
         move.y = 0f;
 
@@ -181,11 +194,11 @@ public class PlayerController : MonoBehaviour
     {
         if (!groundedPlayer) { return; }
 
-        if (Mathf.Abs(playerVelocity.x) > .1f || Mathf.Abs(playerVelocity.z) > .1f)
+        if (Mathf.Abs(playerVelocity.magnitude) > .1f)
         {
-            timer += Time.deltaTime * (isCrouching ? crouchBobSpeed : IsSprinting ? sprintBobSpeed : walkBobSpeed);
+            timer = Time.deltaTime * (isCrouching ? crouchBobSpeed : IsSprinting ? sprintBobSpeed : walkBobSpeed);
 
-            cameraShake.ShakeCamera(isCrouching ? crouchBobAmount : IsSprinting ? sprintBobAmount : walkBobAmount, timer);
+            cameraShake.ShakeCamera(isCrouching ? crouchBobAmount : IsSprinting ? sprintBobAmount : walkBobAmount, Mathf.Sin(timer));
         }
     }
 
@@ -193,13 +206,14 @@ public class PlayerController : MonoBehaviour
     {
         if (Physics.Raycast(Camera.main.ViewportPointToRay(interactionWayPoint), out RaycastHit hit, interactionDistance))
         {
-            if (hit.collider.gameObject.layer == 9 && (currentInteractable == null || 
+            if (hit.collider.gameObject.layer == 6 && (currentInteractable == null || 
                 hit.collider.gameObject.GetInstanceID() != currentInteractable.GetInstanceID()))
             {
                 hit.collider.TryGetComponent(out currentInteractable);
 
                 if (currentInteractable)
                 {
+                    Debug.DrawLine(cameraTransform.transform.position, hit.collider.transform.position, Color.blue);
                     currentInteractable.OnFocus();
                 }
             }
